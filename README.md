@@ -8,7 +8,8 @@ just feel
 
 # TODO
 
-refactor
-libc version helpper
-for version >= 2.34
+installer
+refactor  
+libc version helpper  
+support >= 2.34  
 install script
