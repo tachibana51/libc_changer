@@ -1,0 +1,24 @@
+#!/bin/bash
+#
+# for ctf
+# 配られたlibcが手元に無くても無理やりバイナリを動かすことが出来るようにパッチを行う
+#
+#
+if [ $# -eq 0 ]; then
+    echo "usage: $0 [ubuntu-version] [glibc-version] elf-file"
+    exit 1
+fi
+#get debug symbol and interpreter
+sudo docker pull ubuntu:$1
+sudo docker run --name tmp$1 -i -t ubuntu:$1 bash -c "apt update && apt install libc6-dbg"
+sudo docker cp tmp$1:/lib/x86_64-linux-gnu/ld-$2.so .
+sudo docker cp tmp$1:/lib/x86_64-linux-gnu/libc-$2.so "libc.so.6"
+mkdir ".debug"
+sudo docker cp tmp$1:/usr/lib/debug/lib/x86_64-linux-gnu/libc-$2.so ".debug/libc.so.6"
+mkdir -p .debug/lib/x86_64-linux-gnu/
+sudo docker cp tmp$1:/usr/lib/debug/lib/x86_64-linux-gnu/ld-$2.so ".debug/ld-$2.so"
+sudo docker rm tmp$1
+#patchelf
+patchelf --set-interpreter `pwd`/ld-$2.so $3
+patchelf --replace-needed  libc.so.6 "`pwd`/libc.so.6" $3
+patchelf  --set-rpath `pwd` $3
